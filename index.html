@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trabajo en Rancagua — Empleos y Ofertas Laborales</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #38bdf8;
+      --border: #334155;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding: 1.5rem; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+    .container { max-width: 900px; width: 100%; }
+    header { text-align: center; margin-bottom: 2rem; }
+    .badge { display: inline-block; background: #0284c7; color: white; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; margin-bottom: 0.75rem; }
+    h1 { font-size: 2.2rem; font-weight: 800; margin-bottom: 0.5rem; }
+    .subtitle { color: var(--text-muted); font-size: 1rem; }
+    
+    .disclaimer-card { background: rgba(234, 179, 8, 0.1); border: 1px solid rgba(234, 179, 8, 0.3); border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem; font-size: 0.85rem; color: #fef08a; line-height: 1.4; }
+    .search-box { width: 100%; padding: 0.9rem 1.2rem; background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; color: white; font-size: 1rem; margin-bottom: 1rem; outline: none; }
+    .search-box:focus { border-color: var(--primary); }
+    
+    .categories { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.5rem; }
+    .cat-btn { background: var(--card-bg); border: 1px solid var(--border); color: var(--text-muted); padding: 0.4rem 0.8rem; border-radius: 8px; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; }
+    .cat-btn.active, .cat-btn:hover { background: var(--primary); color: #000; font-weight: 600; border-color: var(--primary); }
+    
+    .counter { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem; }
+    .grid { display: grid; gap: 1rem; }
+    .job-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+    .job-info h3 { font-size: 1.15rem; margin-bottom: 0.3rem; }
+    .job-company { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.5rem; }
+    .job-meta { display: flex; gap: 0.5rem; flex-wrap: wrap; font-size: 0.75rem; }
+    .tag { background: #334155; padding: 0.2rem 0.5rem; border-radius: 6px; }
+    .tag-cat { background: rgba(56, 189, 248, 0.15); color: var(--primary); }
+    
+    .btn-apply { background: var(--primary); color: #04121d; text-decoration: none; padding: 0.65rem 1.2rem; border-radius: 8px; font-weight: 700; font-size: 0.9rem; white-space: nowrap; transition: opacity 0.2s; }
+    .btn-apply:hover { opacity: 0.9; }
+    
+    @media (max-width: 600px) {
+      .job-card { flex-direction: column; align-items: flex-start; }
+      .btn-apply { width: 100%; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <span class="badge">RANCAGUA Y O'HIGGINS</span>
+      <h1>Trabajo en Rancagua</h1>
+      <p class="subtitle">Portal oficial y gratuito de ofertas laborales de la zona</p>
+    </header>
+
+    <div class="disclaimer-card">
+      ⚠️ <strong>Aviso importante:</strong> Este portal es de difusión comunitaria. No cobramos dinero, no recibimos currículums ni intervenimos en las selecciones. Al pulsar "Postular" serás redirigido al portal original de la empresa.
+    </div>
+
+    <input type="text" id="buscador" class="search-box" placeholder="🔍 Buscar por cargo, empresa o categoría...">
+
+    <div class="categories" id="contenedorCategorias">
+      <button class="cat-btn active" data-cat="TODAS">Todas</button>
+      <button class="cat-btn" data-cat="COMERCIAL / RETAIL">Comercial / Retail</button>
+      <button class="cat-btn" data-cat="LOGÍSTICA">Logística</button>
+      <button class="cat-btn" data-cat="ADMINISTRATIVO">Administrativo</button>
+      <button class="cat-btn" data-cat="GASTRONOMÍA">Gastronomía</button>
+      <button class="cat-btn" data-cat="EDUCACIÓN">Educación</button>
+      <button class="cat-btn" data-cat="SALUD">Salud</button>
+      <button class="cat-btn" data-cat="CONSTRUCCIÓN">Construcción</button>
+      <button class="cat-btn" data-cat="TECNICO / MANTENCION">Técnico / Mantención</button>
+      <button class="cat-btn" data-cat="OTROS / SEGURIDAD">Otros / Seguridad</button>
+    </div>
+
+    <div class="counter" id="contador">Cargando ofertas...</div>
+    <div class="grid" id="contenedorOfertas"></div>
+  </div>
+
+  <script>
+    const APPS_SCRIPT_FALLBACK = "https://script.google.com/macros/s/AKfycbxFYMAJGl3N-mKty4hxblBHYioBvNZpP_ijSxIFd0aDeNcSJVcOBhn-4BORxSHLt4jVEg/exec";
+    let todasLasOfertas = [];
+    let categoriaActual = 'TODAS';
+
+    async function cargarOfertas() {
+      // 1. Intentar cargar desde el archivo ofertas.json generado por GitHub Actions
+      try {
+        const res = await fetch('ofertas.json?v=' + Date.now());
+        if (res.ok) {
+          todasLasOfertas = await res.json();
+          if (Array.isArray(todasLasOfertas) && todasLasOfertas.length > 0) {
+            renderizar();
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn("ofertas.json no disponible, usando enlace directo.");
+      }
+
+      // 2. Si aún no existe ofertas.json, consultar directamente Apps Script
+      try {
+        const res = await fetch(APPS_SCRIPT_FALLBACK);
+        todasLasOfertas = await res.json();
+        renderizar();
+      } catch (e) {
+        document.getElementById('contador').textContent = 'Error cargando ofertas. Intenta nuevamente más tarde.';
+      }
+    }
+
+    function renderizar() {
+      const q = document.getElementById('buscador').value.toLowerCase();
+      const filtradas = todasLasOfertas.filter(o => {
+        const coincideTexto = (o.cargo + ' ' + o.empresa + ' ' + (o.categoria || '')).toLowerCase().includes(q);
+        const coincideCat = categoriaActual === 'TODAS' || (o.categoria && o.categoria.toUpperCase().includes(categoriaActual));
+        return coincideTexto && coincideCat;
+      });
+
+      document.getElementById('contador').textContent = `Mostrando ${filtradas.length} ofertas disponibles`;
+
+      const grid = document.getElementById('contenedorOfertas');
+      grid.innerHTML = filtradas.map(o => `
+        <div class="job-card">
+          <div class="job-info">
+            <h3>${o.cargo}</h3>
+            <div class="job-company">${o.empresa || 'Empresa Confidencial'}</div>
+            <div class="job-meta">
+              <span class="tag tag-cat">${o.categoria}</span>
+              <span class="tag">📅 ${o.fecha}</span>
+            </div>
+          </div>
+          <a href="${o.postular}" target="_blank" rel="noopener noreferrer" class="btn-apply">Postular 👉</a>
+        </div>
+      `).join('');
+    }
+
+    document.getElementById('buscador').addEventListener('input', renderizar);
+
+    document.querySelectorAll('.cat-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        categoriaActual = btn.getAttribute('data-cat');
+        renderizar();
+      });
+    });
+
+    cargarOfertas();
+  </script>
+</body>
+</html>
