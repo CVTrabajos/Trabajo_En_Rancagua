@@ -20,7 +20,7 @@ jobs:
 
       - name: Descargar ofertas desde Apps Script
         env:
-          APPS_SCRIPT_URL: "https://script.google.com/macros/s/AKfycbxFYMAJGl3N-mKty4hxblBHYioBvNZpP_ijSxIFd0aDeNcSJVcOBhn-4BORxSHLt4jVEg/exec"
+          APPS_SCRIPT_URL: "https://script.google.com/macros/s/AKfycbzaYpEQsL9WuC-YKOq7mynU3airsRdCTMgK1QIL2qkzzgcSpvIGBcVCwYNod1crYIbXPA/exec"
         run: |
           curl -sL --retry 3 --max-time 90 "$APPS_SCRIPT_URL" -o nuevo.json
           python3 - <<'EOF'
@@ -39,7 +39,12 @@ jobs:
 
       - name: Guardar cambios
         run: |
-          git config user.name "actualizador"
-          git config user.email "actualizador@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add ofertas.json
-          git diff --cached --quiet || (git commit -m "Actualizar ofertas" && git push)
+          if git diff --staged --quiet; then
+            echo "Sin cambios"
+          else
+            git commit -m "Actualizar ofertas [skip ci]"
+            git push
+          fi
