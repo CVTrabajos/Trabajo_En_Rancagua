@@ -20,7 +20,7 @@ jobs:
 
       - name: Descargar ofertas desde Apps Script
         env:
-          APPS_SCRIPT_URL: "PEGA_AQUI_LA_NUEVA_URL_EXEC_DE_TRABAJO_EN_RANCAGUA"
+          APPS_SCRIPT_URL: "https://script.google.com/macros/s/AKfycbzaYpEQsL9WuC-YKOq7mynU3airsRdCTMgK1QIL2qkzzgcSpvIGBcVCwYNod1crYIbXPA/exec"
         run: |
           curl -sL --retry 3 --max-time 90 "$APPS_SCRIPT_URL" -o nuevo.json
           python3 - <<'EOF'
